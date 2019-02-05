@@ -5,7 +5,7 @@ const port = 8888;
 // discord
 const discord = require('discord.js');
 var client;
-var token = 'NTA5NzcwNzU1NzMxNDg4NzY4.DzGI1A.czVNt_W7DVoXtM2S5ffBbmR2C-4';
+var token = undefined;
 var dis_resData = {};
 var dis_prefix = '%';
 var guild = undefined;
@@ -30,7 +30,8 @@ var emojiToRole = {
 	"warframe" : "Warframe",
 	"anthem" : "Anthem",
 	"youtube" : "YouTube Alerts",
-	"twitch" : "Stream Alerts"
+	"twitch" : "Stream Alerts",
+	"forhonor" : "For Honor"
 }
 
 // Vue.js
@@ -45,6 +46,8 @@ const fs = require('fs');
 // Main function (primes everything)
 function main(){
 	console.log('Booted successfully...');
+	token = fs.readFileSync(`${__dirname}/token.dat`).toString().trim();
+	console.log(token);
 	client = new discord.Client();
 	discordPrimer();
 		
@@ -80,7 +83,14 @@ server.get('/dis_bot/guild', function(req, res){
 	res.send(guild);
 });
 server.get('/dis_bot/guild/members', function(req, res) {
-	res.send(guild_members.array());
+	let mems = {};
+	guild_members.forEach((el, i) => {
+		mems[i] = {
+			username: el.username,
+			id: el.id
+		};
+	});
+	res.send(mems);
 });
 server.get('/dis_bot/guild/channels', function(req, res) {
 	res.send(guild_channels.array());
@@ -122,16 +132,10 @@ function discordPrimer(){
 		checkSaveFile();
 		
 		
-		guildPrimer();
-		getEmojis();
-		getRoles();
-		getMembers();
-	});
-	
-	client.on('message', msg => {
-		if(msg.content === 'ping'){
-			msg.reply('pong!');
-		}
+		guildPrimer();	// This function will set the rules for how to bot responds with different messages.
+		getEmojis();	// This function gets the emoji's and puts them into a new object called emoji_catalog. It only takes the emoji's name's and id's.
+		getRoles();		// This function gets the roles and puts them into a new object called roles_catalog. It only takes the role's names and id's.
+		getMembers();	// This function gets the members and puts them into a new object called members_catalog. It only takes the member's usernames and id's.
 	});
 	
 }
@@ -139,23 +143,24 @@ function discordPrimer(){
 function guildPrimer(){
 	guild_client.on('message', msg => {
 		if(msg.guild){
-			discordComm(msg);
-			discordConv(msg);
+			if(msg.content.startsWith(dis_prefix)){
+				discordComm(msg);
+			}
 		}
-		else{
-			discordConv(msg);
-		}	
+		discordConv(msg);	
 		
 	});
 
 }
 
 function discordConv(msg){
-	if(msg.mentions.users.array().length > 0 ){
+	if(msg.mentions.users.size > 0 ){
 		let usr_mentions = msg.mentions.users;
-		if(usr_mentions.first().username === client.user.username){
-			msg.channel.send(`Hey there, ${msg.author}!`);
-		
+		if(usr_mentions.has(client.user.id)){
+			console.log('Found a mention of me...');
+			if(msg.content.toLowerCase().includes(' hello') || msg.content.toLowerCase().includes(' hi')){
+				msg.channel.send(`Hey there, ${msg.author}!`);
+			}
 		}
 	}
 	
@@ -179,8 +184,15 @@ function discordComm(msg){
 				msg.delete();
 				discordPostRoleAss();
 			}
-			if(msg.content.toLowerCase() === `${dis_prefix}reload`);
+			if(msg.content.toLowerCase() === `${dis_prefix}reload`){
+			}
+			if(msg.content.toLowerCase().startsWith(`${dis_prefix}post `) ){
+				if(msg.content.toLowerCase().substring(6).startsWith('update ')){
+					postUpdate(msg.content.substring(13), msg);
+				}
+			}
 		}
+		
 				
 	}
 
@@ -194,23 +206,29 @@ function discordPostRoleAss(){
 			let message = fs.readFileSync(`${__dirname}/role-assignment-message.md`);
 			
 			message = message.toString();
-			// let message_split = message.split(';');
-			
-			message = message.replace(':news:', toEmoji(emoji_catalog.news));
-			message = message.replace(':anthem:', toEmoji(emoji_catalog.anthem));
-			message = message.replace(':R6:', toEmoji(emoji_catalog.R6));
-			message = message.replace(':warframe:', `<:${emoji_catalog.warframe.name}:${emoji_catalog.warframe.id}>`);
-			message = message.replace(':youtube:', `<:${emoji_catalog.youtube.name}:${emoji_catalog.youtube.id}>`);
-			message = message.replace(':twitch:', `<:${emoji_catalog.twitch.name}:${emoji_catalog.twitch.id}>`);
-			message = message.replace(/;/g, ' ');
+			message = insertEmojis(message);
+			let message_split = message.split(';');
+				
+			let embed_msg = new discord.RichEmbed();
+				embed_msg.setTitle('Welcome to TDefton\'s Server!');
+				embed_msg.setDescription(message);
+				embed_msg.setColor("RANDOM");
 			if(currentPost && currentPost.editable){
-				// currentPost.delete();
-				// currentPost = undefined;
 				console.log("Post already available; modifying the previous post...");
-				currentPost.edit(message);
+				currentPost.edit(embed_msg)
+				.then(msg => {
+					msg.react(emoji_catalog.news.id);
+					msg.react(emoji_catalog.R6.id);
+					msg.react(emoji_catalog.warframe.id);
+					msg.react(emoji_catalog.anthem.id);
+					msg.react(emoji_catalog.youtube.id);
+					msg.react(emoji_catalog.twitch.id);
+					msg.react(emoji_catalog.forhonor.id);
+				});
+			
 			}
-			else{
-				chnl.send(message)
+			else{	
+				chnl.send(embed_msg)
 				.then((msg) => {
 					msg.react(emoji_catalog.news.id);
 					msg.react(emoji_catalog.R6.id);
@@ -218,15 +236,37 @@ function discordPostRoleAss(){
 					msg.react(emoji_catalog.anthem.id);
 					msg.react(emoji_catalog.youtube.id);
 					msg.react(emoji_catalog.twitch.id);
+					msg.react(emoji_catalog.forhonor.id);		
 					currentPost = msg;
 					// console.log(currentPost);
 					saveData.saveMessage.id = msg.id;
 					fs.writeFileSync(`${__dirname}/post-message.json`, JSON.stringify(saveData) );
 				});
 			}
+			
+			
+			
 			addReactionEvents();
 		}
 	});				
+}
+
+function insertEmojis(message){
+	guild_emojis.forEach(el => {
+		if(message.includes(`:${el.name}:`)){
+			let find = new RegExp(`:${el.name}:`, "g");
+			message = message.replace( find, toEmoji(emoji_catalog[el.name]) );
+		} 
+	});
+	//message = message.replace(/:news:/g, toEmoji(emoji_catalog.news));
+	//message = message.replace(/:anthem:/g, toEmoji(emoji_catalog.anthem));
+	//message = message.replace(/:R6:/g, toEmoji(emoji_catalog.R6));
+	//message = message.replace(/:warframe:/g, `<:${emoji_catalog.warframe.name}:${emoji_catalog.warframe.id}>`);
+	//message = message.replace(/:youtube:/g, `<:${emoji_catalog.youtube.name}:${emoji_catalog.youtube.id}>`);
+	//message = message.replace(/:twitch:/g, `<:${emoji_catalog.twitch.name}:${emoji_catalog.twitch.id}>`);
+	//message = message.replace(/:forhonor:/g, `<:${emoji_catalog.forhonor.name}:${emoji_catalog.forhonor.id}>`);
+	message = message.replace(/;/g, '\n');
+	return message;
 }
 
 function getEmojis(){
@@ -259,7 +299,7 @@ function toEmoji(emojiData){
 function addReactionEvents(){
 	guild_client.on('messageReactionAdd', (messageReaction, usr) => {
 		let mem = guild_members.get(usr.id);	
-		if(currentPost.id === messageReaction.message.id && ! messageReaction.me){
+		if(currentPost.id === messageReaction.message.id && usr.username != client.user.username){
 			
 			let emojiName = messageReaction.emoji.name;
 			if(role_catalog[ emojiToRole[emojiName] ]){
@@ -270,17 +310,20 @@ function addReactionEvents(){
 				.catch(console.log);
 			}
 			else{
-				console.log('Unable to find corresponding role... Changing nothing...');			
+				messageReaction.remove(usr);
+				console.log('Unable to find corresponding role... Removing reaction...');			
 			}
 
 		}
-		else
-			messageReaction.remove();
+		// If it turns out that it is the bot creating the post or the user is reacting to a different message.
+		else{
+			console.log(`Removing reaction from ${usr.username}...`)
+		}
 	});
 			
 	guild_client.on('messageReactionRemove', (messageReaction, usr) => {
 		let mem = guild_members.get(usr.id);	
-		if(currentPost.id === messageReaction.message.id && ! messageReaction.me){
+		if(currentPost.id === messageReaction.message.id && usr.username != client.user.username){
 			
 			let emojiName = messageReaction.emoji.name;
 			if(role_catalog[ emojiToRole[emojiName] ]){
@@ -328,4 +371,16 @@ function refreshServerData(){
 	getMembers();
 	getRoles();
 	discordPostRoleAss();
+}
+
+function postUpdate(content, msg){
+	guild_channels.forEach(el => {
+		if(el.name === "bot-updates" && el.type === "text"){
+			let message = insertEmojis(content);
+			el.send(content + '\n@here')
+			.then(newMessage => {
+				msg.delete();
+			});
+		}
+	});
 }

@@ -13,4 +13,5 @@ __**Games**__
 - If you play Warframe, please react with :warframe:
 - If you play Anthem, please react with :anthem:
 - If you play Rainbow Six Siege, please react with :R6:
-- If you play For Honor, Please react with :forhonor:
+- If you play For Honor, please react with :forhonor:
+- If you play Apex Legends, please react with :apexlegends:

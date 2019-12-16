@@ -1,6 +1,6 @@
 const express = require('express');
 const server = express();
-const port = 8881;
+const port = 8888;
 
 // discord
 const discord = require('discord.js');
@@ -26,13 +26,13 @@ var member_catalog = {};
 
 var emojiToRole = {
 	"news" : "News Alerts",
-	"R6" : "Shooters",
-	"warframe" : "Looter Shooters",
+	"R6" : "Rainbow Six Siege",
+	"warframe" : "Warframe",
 	"anthem" : "Anthem",
 	"youtube" : "YouTube Alerts",
 	"twitch" : "Stream Alerts",
-	"forhonor" : "RPGs",
-	"apexlegends" : "Battle Royale"
+	"forhonor" : "For Honor",
+	"apexlegends" : "Apex Legends"
 }
 var unauthed_users = {};
 
@@ -75,6 +75,8 @@ function main(){
 	console.log('Booted successfully...');
 	token = fs.readFileSync(`${__dirname}/token.dat`).toString().trim();
 	// console.log(token);
+	
+	discordPrimer();
 		
 	discordLogin();
 }
@@ -126,9 +128,6 @@ server.get('/dis_bot/guild/emojis', function(req, res) {
 server.get('/dis_bot/guild/emoji_catalog', function(req, res) {
 	res.send(emoji_catalog);
 });
-server.get('/users/unauthed', function(req, res){
-	res.send(`${JSON.stringify(unauthed_users, undefined, 2)}`);
-});
 
 // Discord Functions
 function discordLogin(callback){
@@ -145,31 +144,17 @@ function discordLogin(callback){
 	});
 
 }
-client.on('guildMemberAdd', sendVerification);
 
-function sendVerification(member){
-	console.log(`User ${member.user.username} needs to be verified! Added them to the unauthed list.`);	
+client.on('guildMemberAdd', member => {
 	var val = Math.floor(1000 + Math.random() * 9000);
+	member.send(`To prove your not a dasterdly robot, please type this \`auth ${val}\``);
+	unauthed_users[member.user.username] = {"capcha": val, "member": member};
+});
+
+function discordPrimer(){
 	
-	unauthed_users[member.user.username] = {"capcha": val, "member_id": member.id};
-	setToSaveFile("user_verification", unauthed_users);
-
-	return member.send(`To prove your not a dastardly robot, please type this \`auth ${val}\``)
-	.catch( (err) =>{return err} );
-}
-
-client.on('guildMemberRemove', removeVerification);
-
-function removeVerification(member){
-	console.log(`User ${member.user.username} is being removed from the unverified list.`);	
-	unauthed_users[member.user.username] = undefined;
-	setToSaveFile("user_verification", unauthed_users);
 	
-}
-
-function clearUnauthList(){
-	unauthed_users = {};
-	setToSaveFile("user_verification", unauthed_users);
+	
 }
 
 client.on('ready', () => {
@@ -191,7 +176,7 @@ client.on('ready', () => {
 });
 
 client.on('message', msg => {
-	// console.log('A message was sent somewhere...');
+	console.log('A message was sent somewhere...');
 	if(msg.guild)
 		discordComm(msg);
 	else
@@ -215,7 +200,6 @@ function guildPrimer(){
 }
 
 function discordDM(msg){
-	console.log(`DM[${msg.author.username}<${msg.author.id}>]: ${msg.content}\n`);
 	if(msg.mentions.users.size > 0 ){
 		let usr_mentions = msg.mentions.users;
 		if(usr_mentions.has(client.user.id)){
@@ -227,53 +211,41 @@ function discordDM(msg){
 		}	
 			
 	}
-	
-	if(msg.content.startsWith('auth')){
+	console.log('Was sent a DM...');
+	if(msg.content.startsWith(`auth`)){
 		
 		let dataArr = msg.content.split(' ');
 		if(unauthed_users[msg.author.username]){
 			if(parseInt(dataArr[1]) === unauthed_users[msg.author.username].capcha){
 				// authorized the user
-				// find the member in the members list and add the role to them
-				guild_members.find(member => member.id === unauthed_users[msg.author.username].member_id).addRole(guild_roles.find(role => role.name === "Verified"));
-				msg.author.send(`**You have been __authorized!__**/n/nWelcome to the server, not a robot! Make sure you read the rules and info of the server! If you need a list of commands, just message me \`help\` or use the \`%help\` command in the discord. My prefix for commands is \`%\`. (I know it's weird, just deal with it.)`);
+				msg.author.send(`**You have been __authorized!__**\nWelcome to the server, not a robot!\n\nIf you need a list of commands, just messgae me \`help\` or use the \`%help\` command in the discord.\nMy prefix for commands is \`%\`. (I know it's weird, just deal with it.)`);
+				unauthed_users[msg.author.username].member.addRole(guild_roles.find(role => role.name === "Verified"));
 				unauthed_users[msg.author.username] = undefined;
-				setToSaveFile("user_verification", unauthed_users);
-				console.log(`User ${msg.author} authenticated successfully!`);
 			}
 			else{
 				msg.author.send('That wasn\'t the right code.');
-				console.warn(`User ${msg.author.username} failed to authenticate...`);
+				console.log(`User ${msg.author.username} failed to authenticate...`);
 			}
 		}
 		else{
-			msg.author.send('Something went wrong during verification. If you would like to retry, please type `verify`');
-			console.warn(`I cant find the user ${msg.author.username} in the unauthed user list...\n`);
+			msg.author.send('That is not the right code, capcha failed.');
+			console.log(`I cant find the user ${msg.author.username} in the unauthed user list...\n`);
 		}
-	}
-	else if(msg.content.startsWith('verify')){
-		if(msg.member) sendVerification(msg.member);
-		else{
-			console.log(`I coulen't find the user ${msg.author} in the guild.`);
-			sendVerification(msg.author);
-		} 
 	}
 	
 }
 
 function discordComm(msg){
-	let usr_mentions = undefined;
-	if(msg.mentions.users.array().length > 0)
-		usr_mentions = msg.mentions.users;
-
-	// console.log('A message was sent in the guild...');
+	console.log('A message was sent in the guild...');
 	if(msg.content.startsWith(dis_prefix)){
-		
 		// Everyone
-				
+		let usr_mentions = undefined;
+		if(msg.mentions.users.array().length > 0)
+			usr_mentions = msg.mentions.users;
+		
 		if(msg.content === `${dis_prefix}help`){
-			msg.channel.send(`Sending you the list of basic commands, ${msg.author}...`);
-			msg.author.send(`__**Commands List**__\n${fs.readFileSync(`${__dirname}/commandsList.md`)}`)
+			msg.channel.send(`Lemme message you with some basic commands, ${msg.author}... One second!`);
+			msg.author.send('SIKE! I HAVE NO COMMANDS BOI! YEET! :joy:')
 			.catch( (err) => {
 				msg.channel.send('I can\'t send a message to you. Check your privacy settings?');
 			});
@@ -281,7 +253,7 @@ function discordComm(msg){
 		else if(msg.content === `${dis_prefix}devo`){
 			let devo = {};
 			guild_members.forEach(person => {
-				// console.log(person.user.username);
+				console.log(person.user.username);
 				if(person.user.username.includes('devo'))
 					devo = person;
 				else if(person.id === '367500108163579904')
@@ -289,107 +261,34 @@ function discordComm(msg){
 			});
 			msg.channel.send(`${devo} looks like a thumb.\n`);
 		}
-		else if(msg.content.toLowerCase() === `${dis_prefix}verify`){
-			msg.channel.send(`Restarting your Verification process now. Please check your DM's`);
-			if(msg.member) sendVerification(msg.member);
-			else sendVerification(msg.author);
+		else if(msg.content.startsWith(`${dis_prefix}`)){
+			msg.channel.send('That is not a command.');
+			
 		}
-		else if(msg.content.toLowerCase() === `${dis_prefix}69`){
-			msg.channel.send('BLICKY GOT THE STICKY UHH');
-		}
-		else if(msg.content.toLowerCase() === `${dis_prefix}poopityscoop`){
-			msg.channel.send('__The Wise words of Kanye__\nPoopy-di scoop\nScoop-diddy-whoop\nWhoop-di-scoop-di-poop\nPoop-di-scoopty\nScoopty-whoop\nWhoopity-scoop, whoop-poop');
-		}
-		
-		
 
 		// Admins
-		else if(msg.content.toLowerCase() === `${dis_prefix}resetmessage`){
-			if(msg.guild && msg.member.hasPermission(discord.Permissions.FLAGS.ADMINISTRATOR)){
+		if(msg.guild && msg.member.hasPermission(discord.Permissions.FLAGS.ADMINISTRATOR)){
+			if(msg.content.toLowerCase() === `${dis_prefix}resetmessage`){
 				msg.delete();
 				discordPostRoleAss();
 			}
-			else{
-				msg.channel.send(`Sorry, you don't have permission to use that command. :sad:`);
-			}
-		}
-		else if(msg.content.toLowerCase() === `${dis_prefix}reload`){
-			if(msg.guild && msg.member.hasPermission(discord.Permissions.FLAGS.ADMINISTRATOR))
+			if(msg.content.toLowerCase() === `${dis_prefix}reload`){
 				refreshServerData();
-			else{
-				msg.channel.send(`Sorry, you don't have permission to use that command. :sad:`);
 			}
-		}
-		else if(msg.content.toLowerCase().startsWith(`${dis_prefix}post `) ){
-			if(msg.guild && msg.member.hasPermission(discord.Permissions.FLAGS.ADMINISTRATOR)){
+			if(msg.content.toLowerCase().startsWith(`${dis_prefix}post `) ){
 				if(msg.content.toLowerCase().substring(6).startsWith('update ')){
 					postUpdate(msg.content.substring(13), msg);
 				}
 			}
-			else{
-				msg.channel.send(`Sorry, you don't have permission to use that command. :sad:`);
-			}
-		}
-		else if(msg.content.toLowerCase().startsWith(`${dis_prefix}forceverify `)){
-			if(msg.guild && msg.member.hasPermission(discord.Permissions.FLAGS.ADMINISTRATOR)){
-				if(usr_mentions){
-					let msg_to = [];
-					usr_mentions.forEach((usr) => {
-						if(usr.id != client.id){
-							let mem = guild_members.find(el => el.user.username === usr.username);
-							if(mem) sendVerification(mem);
-							else
-							msg.author.send('I couldn\'t find the user to force verify.');
-						}
-					});
-					msg.author.send(`Users \`(${msg_to.join(', ')})\` were all sent a verification message.`);
-					msg.delete();
-					
-				}
-			}
-			else{
-				msg.channel.send(`Sorry, you don't have permission to use that command. :sad:`);
-			}	
-		}
-		else if(msg.content.toLowerCase() ===`${dis_prefix}unauthedlist`){
-			if(msg.guild && msg.member.hasPermission(discord.Permissions.FLAGS.ADMINISTRATOR)){
-				
-				/*setTimeout( () => {
-					
-				}, 60000);
-				*/
-				msg.author.send(`Please go to http://tdefton.systems:${port}/users/unauthed and make sure you jave a JSON parser extension.`);
-				msg.delete();
-			}
-			else{
-				msg.channel.send(`Sorry, you don't have permission to use that command. :sad:`);
-			}
-		}
-		else if(msg.content.toLowerCase() === `${dis_prefix}clearunauthlist`){
-			if(msg.guild && msg.member.hasPermission(discord.Permissions.FLAGS.ADMINISTRATOR)){
-				msg.channel.send('**Are you sure** you want to clear the list of unauthed users? These users will have to manualy restart the verification process or rejoin the server to get verified.')
-				.then(msgConfirm => {
-					let filter = (reaction, user) => user.id === msg.author.id;
-					let rf = msgConfirm.createReactionCollector(filter, {time: 30000})
-					rf.on('collect', reaction => {
-						msg.channel.send('Clearing the Unauthorized user list...');
-						clearUnauthList();
-					});
-					rf.on('end', collected => {});
-				});
-			}
-			else{
-				msg.channel.send(`Sorry, you don't have permission to use that command. :sad:`);
-			}
-		}
 			
-		// Announcer || admin
-		else if(msg.content.toLowerCase().startsWith(`${dis_prefix}announce `) ){
-			if(msg.guild && (msg.member.hasPermission(discord.Permissions.FLAGS.ADMINISTRATOR) || msg.member.roles.find(role => role.name === "Announcer") )){
+		}
+		if(msg.guild && (msg.member.hasPermission(discord.Permissions.FLAGS.ADMINISTRATOR) || msg.member.roles.find("name", "Announcer") )){
+			
+			if(msg.content.toLowerCase().startsWith(`${dis_prefix}announce `) ){
 				let msg_arr = msg.content.split(" ");
 				// index 0: start of command
 				// index 1: sevarity
-				// index 2+: Message
+				// index 3+: Message
 				
 				// if the sevarity given is in the list of levels...
 				if(msg_sevarity[msg_arr[1].toLowerCase()]){
@@ -411,12 +310,7 @@ function discordComm(msg){
 				
 				
 			}
-			else{
-				msg.channel.send(`Sorry, you don't have permission to use that command. :sad:`);
-			}
-		}
-		else if(msg.content.toLowerCase().startsWith(`${dis_prefix}poll `)){
-			if(msg.guild && (msg.member.hasPermission(discord.Permissions.FLAGS.ADMINISTRATOR) || msg.member.roles.find(role => role.name === "Announcer") )){
+			else if(msg.content.toLowerCase().startsWith(`${dis_prefix}poll `)){
 				let msg_arr = msg.content.split(" ");
 				// index 0: command start
 				// index 2: lol the message dummy
@@ -425,23 +319,9 @@ function discordComm(msg){
 				
 				
 			}
-			else{
-				msg.channel.send(`Sorry, you don't have permission to use that command. :sad:`);
-			}
-		}
-		else if(msg.content.startsWith(`${dis_prefix}`)){
-			msg.channel.send(`${msg.author}, that command doesn't exist :sad:`);
-			
 		}
 		
 				
-	}
-	else if(usr_mentions && usr_mentions.find(el => {return el.id === client.user.id})){
-		console.log('Someone mentioned me in the guild!');
-		if(msg.content.toLowerCase().includes('sorry')){
-			msg.channel.send(`It's okay ${msg.author}`);
-		}
-		
 	}
 
 }
@@ -509,12 +389,9 @@ function discordPostRoleAss(){
 
 function insertEmojis(message){
 	guild_emojis.forEach(el => {
-		
 		if(message.includes(`:${el.name}:`)){
-			// console.log(el.name);
 			let find = new RegExp(`:${el.name}:`, "g");
 			message = message.replace( find, toEmoji(emoji_catalog[el.name]) );
-			// console.log(`${message}\n`);
 		} 
 	});
 	
@@ -612,55 +489,11 @@ function checkSaveFile(){
 			});
 			
 		}
-		
 	}
 	catch(e){
 		console.log(`There was a problem retrieving the save file\n${e}`);
 	}
-	if(data.user_verification){
-		unauthed_users = getFromSaveFile('user_verification');
-		//console.log(JSON.stringify(unauthed_users, undefined, 2));
-	}
-	if(!unauthed_users){
-		console.log(`There was a problem retrieving the unauthed users from the save file\nERROR: ${e}`);
-	}
 }
-
-function setToSaveFile(name, dataToAppend){
-	try{
-		data = JSON.parse( fs.readFileSync(`${__dirname}/data.json`) );
-		data[name] = dataToAppend;
-		fs.writeFileSync(`${__dirname}/data.json`, JSON.stringify(data) );
-		
-	}
-	catch(e){
-		console.log(`There was a problem retrieving or saving the save file\n${e}`);
-	}
-}
-
-function remFromSaveFile(name){
-	try{
-		data = JSON.parse( fs.readFileSync(`${__dirname}/data.json`) );
-		data[name] = undefined;
-		fs.writeFileSync(`${__dirname}/data.json`, JSON.stringify(data) );
-		
-	}
-	catch(e){
-		console.log(`There was a problem retrieving or saving the save file\n${e}`);
-	}
-}
-function getFromSaveFile(name){
-	try{
-		data = JSON.parse( fs.readFileSync(`${__dirname}/data.json`) );
-		return data[name];
-		
-	}
-	catch(e){
-		console.log(`There was a problem retrieving or saving the save file\n${e}`);
-		return undefined;
-	}
-}
-
 
 function refreshServerData(){
 	checkSaveFile();
@@ -671,13 +504,11 @@ function refreshServerData(){
 
 function postUpdate(content, msg){
 	guild_channels.forEach(el => {
-		if((el.name === "bot-updates" || el.name === "comet-watch") && el.type === "text"){
+		if(el.name === "bot-updates" && el.type === "text"){
 			let message = insertEmojis(content);
-			console.log(content);
-			el.send(`**__Update__**\n${content}`)
+			el.send(content)
 			.then(newMessage => {
 				msg.delete();
-				msg.author.send(`**Bot Update** posted successfully!\n\n__Message__\n${content}`);
 			});
 		}
 	});
@@ -688,6 +519,12 @@ function dynamicRoomCreation(){
 		
 	}
 	guild_channels.get();
+}
+
+function messagePermission(msg){
+	if(msg.content.includes('https://') || msg.content.includes('http://')){
+		
+	}
 }
 
 

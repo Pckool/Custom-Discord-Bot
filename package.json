@@ -19,7 +19,7 @@
   "author": "TDefton",
   "license": "ISC",
   "dependencies": {
-    "bootstrap": "^4.2.1",
+    "bootstrap": "^4.3.1",
     "bufferutil": "^4.0.1",
     "discord.js": "^11.5.1",
     "express": "^4.16.4",

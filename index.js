@@ -1,7 +1,10 @@
 const express = require('express');
+const _ = require('lodash');
 const server = express();
-const port = 8881;
-
+const process = require('process');
+const port = process.env.PORT?process.env.PORT:8887;
+// fs
+const fs = require('fs');
 // discord
 const discord = require('discord.js');
 var client = new discord.Client();
@@ -61,31 +64,44 @@ var msg_sevarity = {
 
 var pollActive = false;
 
-// Vue.js
-const vue = require('vue');
+// Process Functions
+process.on('exit', (code) => {
+	console.log(`Exiting with code ${code}...`);
+	
+	client.destroy().then( () => {
+		console.log('Discord client disconnected...');
+		
+		// delete app;
+	})
+	.catch( err => {
+		// delete app;
+	});
+});
 
-// bootstrap
-//require('bootstrap');
-
-// fs
-const fs = require('fs');
+process.on('uncaughtException', (err) => {
+	fs.writeSync(1, `Caught exception: ${err}\n`);
+	console.log(`Caught exception: ${err}\n`);
+});
 
 // Main function (primes everything)
 function main(){
 	console.log('Booted successfully...');
-	token = fs.readFileSync(`${__dirname}/token.dat`).toString().trim();
+	try{
+		token = process.env.DISCORD_TOKEN?process.env.DISCORD_TOKEN:fs.readFileSync(`${__dirname}/token.dat`).toString().trim();
+		discordLogin();
+		
+	}
+	catch(e){
+		console.error(e);
+	}
+	
 	// console.log(token);
 		
-	discordLogin();
+	
 }
 
 // Server functions
-server.listen(port, () => { 
-	console.log(`Express server listening on port ${port}...`);
-	if(main != undefined){
-		main();
-	}
-});
+
 
 var saveData = {
 	saveMessage : {
@@ -130,8 +146,17 @@ server.get('/users/unauthed', function(req, res){
 	res.send(`${JSON.stringify(unauthed_users, undefined, 2)}`);
 });
 
+server.listen(port, () => { 
+	console.log(`Express server listening on port ${port}...`);
+	if(main != undefined){
+		main();
+	}
+});
+
+
 // Discord Functions
 function discordLogin(callback){
+	if(!token) return console.error('No login token was given');
 	client.login(token)
 	.then(() => {
 		if(callback) 
@@ -148,14 +173,40 @@ function discordLogin(callback){
 client.on('guildMemberAdd', sendVerification);
 
 function sendVerification(member){
-	console.log(`User ${member.user.username} needs to be verified! Added them to the unauthed list.`);	
-	var val = Math.floor(1000 + Math.random() * 9000);
-	
-	unauthed_users[member.user.username] = {"capcha": val, "member_id": member.id};
-	setToSaveFile("user_verification", unauthed_users);
+	try{
+		console.log('\n---------------------------------------------\n')
+		// console.log(member);
+		if (member.roles){
+			// this means it is not a guild member message but a dm
+			console.log(`User ${member.user.username} needs to be verified! Added them to the unauthed list.`);
+			var val = Math.floor(1000 + Math.random() * 9000);
 
-	return member.send(`To prove your not a dastardly robot, please type this \`auth ${val}\``)
-	.catch( (err) =>{return err} );
+			unauthed_users[member.user.username] = { "capcha": val, "member_id": member.id };
+			setToSaveFile("user_verification", unauthed_users);
+
+			return member.send(`To prove your not a dastardly robot, please type this \`auth ${val}\``)
+			.catch((err) => { return err });
+		}
+		else if (member.username){
+			console.log(`User ${member.username} needs to be verified! Added them to the unauthed list.`);
+			var val = Math.floor(1000 + Math.random() * 9000);
+
+			unauthed_users[member.username] = { "capcha": val, "member_id": member.id };
+			setToSaveFile("user_verification", unauthed_users);
+
+			return member.send(`To prove your not a dastardly robot, please type this \`auth ${val}\``)
+			.catch((err) => { return err });
+		}
+		else{
+
+		}
+		
+	}
+	catch(e){
+		console.error(e);
+		
+	}
+	
 }
 
 client.on('guildMemberRemove', removeVerification);
@@ -236,7 +287,7 @@ function discordDM(msg){
 				// authorized the user
 				// find the member in the members list and add the role to them
 				guild_members.find(member => member.id === unauthed_users[msg.author.username].member_id).addRole(guild_roles.find(role => role.name === "Verified"));
-				msg.author.send(`**You have been __authorized!__**/n/nWelcome to the server, not a robot! Make sure you read the rules and info of the server! If you need a list of commands, just message me \`help\` or use the \`%help\` command in the discord. My prefix for commands is \`%\`. (I know it's weird, just deal with it.)`);
+				msg.author.send(`**You have been __authorized!__**\n\nWelcome to the server, not a robot! Make sure you read the rules and info of the server! If you need a list of commands, just message me \`help\` or use the \`%help\` command in the discord. My prefix for commands is \`%\`. (I know it's weird, just deal with it.)`);
 				unauthed_users[msg.author.username] = undefined;
 				setToSaveFile("user_verification", unauthed_users);
 				console.log(`User ${msg.author} authenticated successfully!`);
@@ -765,3 +816,4 @@ function postAnnouncement(str, username, sev){
 		}
 	});	
 }
+

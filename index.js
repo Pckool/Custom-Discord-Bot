@@ -142,7 +142,24 @@ server.get('/dis_bot/guild/emojis', function(req, res) {
 server.get('/dis_bot/guild/emoji_catalog', function(req, res) {
 	res.send(emoji_catalog);
 });
+server.get('/dis_bot/restart', function (req, res) {
+	discordLogin(err => {
+		if(err){
+			res.sendStatus(500);
+		}
+		else{
+			res.sendStatus(200);
+		}
+		
+	})
+	
+});
 server.get('/users/unauthed', function(req, res){
+	res.send(`${JSON.stringify(unauthed_users, undefined, 2)}`);
+});
+
+
+server.get('/users/unauthed', function (req, res) {
 	res.send(`${JSON.stringify(unauthed_users, undefined, 2)}`);
 });
 

@@ -5,8 +5,9 @@ const dmFns: Array<(message: Message) => unknown> = [];
 const gmFns: Array<(message: Message) => unknown> = [];
 
 client.on('message', msg => {
-	if(msg.author.id === client.user.id) return console.log('Client is the same!', msg.author.username, client.user.username);
-	// else{console.log( 'Client is different', msg.author.username, client.user.username )}
+	if(msg.author.id === client.user.id) return;
+	else{console.log( 'Got a message from', msg.author.username)}
+	
 	if(msg.guild){
 		gmFns.forEach(fn => fn(msg))
 	}

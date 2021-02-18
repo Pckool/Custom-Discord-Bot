@@ -34,7 +34,7 @@ export function sendVerification(member: GuildMember | User){
 			setAuthKey(member.user.id, val)
 
 			return member.send(`To prove your not a dastardly robot, please type this \`auth ${val}\``)
-			.catch((err) => { return err });
+			.catch((err) => { throw err });
 		}
 		else{
 			console.log(member.id)
@@ -44,13 +44,12 @@ export function sendVerification(member: GuildMember | User){
 			setAuthKey(member.id, val)
 
 			return member.send(`To prove your not a dastardly robot, please type this \`auth ${val}\``)
-			.catch((err) => { return err });
+			.catch((err) => { throw err });
 		}
 		
 	}
 	catch(e){
 		console.error(e);
-		
 	}
 	
 }
@@ -66,9 +65,8 @@ export async function checkVerification(user: User, message: Message){
 			try{
 				await delAuthKey(user.id);
 				const role = findRoleByName('Verified')
-				console.log(user.id, client.guilds.cache.array())
 				const guilds = client.guilds.cache.array()
-				let member;
+				let member: GuildMember;
 				for(let guild of guilds){
 					const mem = guild.member(user.id)
 					if(mem){ 
@@ -78,15 +76,16 @@ export async function checkVerification(user: User, message: Message){
 					else member = guild.ownerID === user.id ? guild.owner : mem
 				}
 				
-				console.log('member:',member)
+				
 				
 				if(member){
+					console.log(`Member ${member.user.username} has been verified!`)
 					addRoleToUser(role.id, member)
 					message.react(`${emoji.emoji.thumbsup}`)
 					message.reply(`**You have been __authorized!__**\n\nWelcome to the server, not a robot! Make sure you read the rules and info of the server! If you need a list of commands, just message me \`help\` or use the \`!help\` command in the discord. My prefix for commands is \`!\`.`)
 				}
 				else{
-					console.log(`User ${user.username} does not exist in the guild`)
+					console.log(`User ${user.username} does not exist in the guild. Verification Failed!`)
 				}
 			}catch(err){
 				console.error(err)

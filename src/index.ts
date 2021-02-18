@@ -24,7 +24,7 @@ import { pushMessageFunction, pushDMFunction } from './handlers/messageHandler';
 		}
 	})
 	pushDMFunction( (msg) => {
-		if(msg.content.includes('auth')){
+		if(msg.content.startsWith('auth')){
 			const user = msg.author;
 			checkVerification(user, msg);
 		}

@@ -17,8 +17,19 @@ export function initAnnouncements(){
 				const messageSplit = msg.content.split(' ')
 				
 				sendMessage('811417859904372806', messageSplit.slice(1).join(' '), {
-					everyone: false,
+					everyone: true,
 					title: "ANNOUNCEMENT"
+				});
+				msg.react(emoji.get('thumbsup'))
+			}
+			
+			else if(msg.content.startsWith('!announce-event ')){
+				if(!client.guilds.cache.array().find(guild => guild.ownerID === msg.author.id)) throw basicPermissionError;
+				const messageSplit = msg.content.split(' ')
+				
+				sendMessage('811428311119953930', messageSplit.slice(1).join(' '), {
+					everyone: true,
+					title: 'EVENT'
 				});
 				msg.react(emoji.get('thumbsup'))
 			}
@@ -28,14 +39,14 @@ export function initAnnouncements(){
 				const messageSplit = msg.content.split(' ')
 				
 				sendMessage('811421682304417833', messageSplit.slice(1).join(' '), {
-					everyone: false,
+					everyone: true,
 					url: 'https://twitch.tv/tdefton',
 					urlInContent: true,
 					title: 'NEW STREAM'
 				});
 				msg.react(emoji.get('thumbsup'))
 			}
-
+			
 			else if(msg.content.startsWith('!announce-video ')){
 				if(!client.guilds.cache.array().find(guild => guild.ownerID === msg.author.id)) throw basicPermissionError;
 
@@ -45,7 +56,7 @@ export function initAnnouncements(){
 
 				if(link){
 					sendMessage('811421729305264208', messageSplit.slice(2).join(' '), {
-						everyone: false,
+						everyone: true,
 						url: messageSplit[1],
 						urlInContent: true,
 						title: 'NEW VIDEO'

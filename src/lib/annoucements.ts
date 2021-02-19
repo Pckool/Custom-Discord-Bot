@@ -13,16 +13,18 @@ export function initAnnouncements(){
 	pushGMFunction( (msg) => {
 		try{
 			if(msg.content.startsWith('!announce ')){
-				if(!client.guilds.cache.array().find(guild => guild.ownerID === msg.author.id)) throw basicPermissionError
+				if(!client.guilds.cache.array().find(guild => guild.ownerID === msg.author.id)) throw basicPermissionError;
 				const messageSplit = msg.content.split(' ')
 				
 				sendMessage('811417859904372806', messageSplit.slice(1).join(' '), {
-					everyone: false
+					everyone: false,
+					title: "ANNOUNCEMENT"
 				});
+				msg.react(emoji.get('thumbsup'))
 			}
 
 			else if(msg.content.startsWith('!announce-stream ')){
-				if(!client.guilds.cache.array().find(guild => guild.ownerID === msg.author.id)) throw basicPermissionError
+				if(!client.guilds.cache.array().find(guild => guild.ownerID === msg.author.id)) throw basicPermissionError;
 				const messageSplit = msg.content.split(' ')
 				
 				sendMessage('811421682304417833', messageSplit.slice(1).join(' '), {
@@ -35,7 +37,7 @@ export function initAnnouncements(){
 			}
 
 			else if(msg.content.startsWith('!announce-video ')){
-				if(!client.guilds.cache.array().find(guild => guild.ownerID === msg.author.id)) throw basicPermissionError
+				if(!client.guilds.cache.array().find(guild => guild.ownerID === msg.author.id)) throw basicPermissionError;
 
 				const messageSplit = msg.content.split(' ')
 				
@@ -55,7 +57,7 @@ export function initAnnouncements(){
 				}
 			}
 		} catch(err){
-			console.error(err)
+			console.warn(err.message)
 			msg.react(emoji.get('thumbsdown'))
 			if(err.message) msg.reply(err.message)
 		}

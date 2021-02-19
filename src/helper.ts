@@ -3,7 +3,7 @@ import { TextChannel } from 'discord.js';
 import fs from 'fs'
 import { client } from './client';
 import emoji from 'node-emoji'
-export const basicPermissionError = new Error(`${emoji.find('police_officer')} You don\'t have permission for that!`)
+export const basicPermissionError = new Error(`:police_officer: You don\'t have permission for that!`)
 export const isTextChannel = (inp: TextChannel | string): inp is TextChannel => (inp as TextChannel).id !== undefined 
 
 export function findTextChannel(channel: TextChannel | string){

@@ -8,28 +8,22 @@ import {startServer} from './restApi';
 // fs
 import fs from 'fs';
 // discord
-import {start} from './client'
-import { sendVerification, checkVerification } from './lib/verification'
+import {client, start} from './client'
+import { initVerification } from './lib/verification'
+import { initAnnouncements } from './lib/annoucements'
 import { pushMessageFunction, pushDMFunction } from './handlers/messageHandler';
 
 
 
-(() => {
+(async () => {
 	startServer()
+	await start();
+	client.on('ready', () => {
+		initVerification()
+		initAnnouncements()
+	})
 	
-	pushMessageFunction( (msg) => {
-		if(msg.content.includes('verify')){
-			const user = msg.member || msg.author;
-			sendVerification(user);
-		}
-	})
-	pushDMFunction( (msg) => {
-		if(msg.content.startsWith('auth')){
-			const user = msg.author;
-			checkVerification(user, msg);
-		}
-	})
-	start();
+	
 })();
 
 

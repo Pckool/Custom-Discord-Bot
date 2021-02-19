@@ -17,7 +17,7 @@ export async function start() {
 		await client.guilds.cache.array().forEach(guild => {
 			const gid = guild.id
 			if(gid){
-				console.log(gid);
+				// console.log(`${gid}: ${guild.name}`);
 			}
 		});
 	} catch(err){

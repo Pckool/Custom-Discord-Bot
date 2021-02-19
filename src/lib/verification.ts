@@ -11,6 +11,7 @@ redisClient.on('error', (err) => {
 })
 
 import emoji from 'node-emoji'
+import { pushDMFunction, pushMessageFunction } from '../handlers/messageHandler';
 
 function setAuthKey(key: string, value: string | number){
 	redisClient.set(key, String(value), redis.print)
@@ -102,3 +103,18 @@ export async function checkVerification(user: User, message: Message){
 }
 
 client.on('guildMemberAdd', sendVerification);
+
+export function initVerification() {
+	pushMessageFunction( (msg) => {
+		if(msg.content.includes('verify')){
+			const user = msg.member || msg.author;
+			sendVerification(user);
+		}
+	})
+	pushDMFunction( (msg) => {
+		if(msg.content.startsWith('auth')){
+			const user = msg.author;
+			checkVerification(user, msg);
+		}
+	})
+}

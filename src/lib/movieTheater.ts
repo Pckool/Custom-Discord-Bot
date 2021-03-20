@@ -1,6 +1,6 @@
 import { client, guild } from "../client";
 import emoji from 'node-emoji';
-import {getConfigProp, saveToConfig} from './../handlers/config'
+import {getConfigProp, saveToConfig, configFile} from './../handlers/config'
 import {TheatreData} from './../interfaces'
 import { GuildChannel, GuildChannelResolvable, TextChannel } from "discord.js";
 
@@ -17,7 +17,7 @@ export async function createTheatre(){
 }
 
 async function createCat(){
-	const cat = await guild.channels.create(`Watch Together! ${ emoji.find(emoji.emoji.movie_camera) }`, {
+	const cat = await guild.channels.create(`Watch Together! ${ emoji.get(emoji.emoji.movie_camera) }`, {
 		type: 'category',
 
 	});
@@ -26,7 +26,7 @@ async function createCat(){
 }
 
 async function createChat(cat: GuildChannelResolvable){
-	const chat = await guild.channels.create(`${ emoji.find(emoji.emoji.left_speech_bubble) }theater-chat`, {
+	const chat = await guild.channels.create(`${ emoji.get(emoji.emoji.left_speech_bubble) }theater-chat`, {
 		type: 'text',
 		parent: cat,
 
@@ -36,7 +36,7 @@ async function createChat(cat: GuildChannelResolvable){
 }
 
 async function createVoice(cat: GuildChannelResolvable){
-	const voice = await guild.channels.create(`${ emoji.find(emoji.emoji.popcorn) }Theater!`, {
+	const voice = await guild.channels.create(`${ emoji.get(emoji.emoji.popcorn) }Theater!`, {
 		type: 'voice',
 		parent: cat,
 
@@ -65,6 +65,7 @@ export function findTheatre(theatre: TheatreData){
 
 function watchChatChannel(){
 	client.on('voiceStateUpdate', (old, curr) => {
+		console.log('voice state update', old.channelID, curr.channelID)
 		if(curr.channelID === theatre.voiceId && curr.channelID !== old.channelID){
 			const chan = guild.channels.resolve(theatre.chatId)
 			if(chan.type === 'text'){
@@ -75,6 +76,7 @@ function watchChatChannel(){
 }
 
 export function initTheatre(){
+	// console.log(configFile);
 	const conf = getConfigProp('theatre_data')
 	if(conf){
 		Object.assign(theatre, conf);

@@ -7,12 +7,13 @@ interface ConfigData {
 
 }
 
-const configDir = path.join(__dirname, '../../conf/bot.conf');
+const configDir = path.join(__dirname, './../../conf');
+export const configFile = path.join(configDir, 'bot.json');
 
 export function getConfig(): ConfigData{
 	try{
 		console.log('retrieving config...')
-		const exConf = fs.readFileSync(configDir, {encoding: 'utf-8'})
+		const exConf = fs.readFileSync(configFile, {encoding: 'utf-8'})
 		return <ConfigData>JSON.parse(exConf);
 	}
 	catch(err){
@@ -26,7 +27,7 @@ export function saveToConfig(data: ConfigData){
 	for(let key of Object.keys(data))
 	conf[key] = { ...conf[key], ...data[key] }
 	
-	fs.writeFileSync(configDir, JSON.stringify(conf), {encoding: 'utf-8'})
+	fs.writeFileSync(configFile, JSON.stringify(conf), {encoding: 'utf-8'})
 }
 export function getConfigProp(prop: keyof ConfigData): TheatreData | null { 
 	const conf = getConfig();

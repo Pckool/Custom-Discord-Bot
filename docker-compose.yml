@@ -9,3 +9,5 @@ services:
     depends_on:
       - redis
     restart: always
+    volumes:
+      - "/conf:/home/comet/conf"

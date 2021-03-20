@@ -10,6 +10,7 @@ interface ConfigData {
 const configDir = path.join(__dirname, 'conf/bot.conf')
 export function getConfig(): ConfigData{
 	try{
+		console.log('retrieving config...')
 		const exConf = fs.readFileSync(configDir, {encoding: 'utf-8'})
 		return <ConfigData>JSON.parse(exConf);
 	}
@@ -19,6 +20,7 @@ export function getConfig(): ConfigData{
 	}
 }
 export function saveToConfig(data: ConfigData){
+	console.log('saving config...')
 	const conf = getConfig()
 	for(let key of Object.keys(data))
 	conf[key] = { ...conf[key], ...data[key] }

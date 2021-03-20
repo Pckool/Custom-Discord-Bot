@@ -2,11 +2,20 @@
 
 import { client } from "../client";
 import { pushDMFunction, pushGMFunction, pushMessageFunction, sendEmbededMessage, sendMessage } from "../handlers/messageHandler";
+import {getConfigProp, saveToConfig, savePropToConfig} from './../handlers/config'
 import emoji from 'node-emoji'
 import { basicPermissionError } from "../helper";
+import { AnnouncementData } from "../interfaces";
+
+const announcementChannels: AnnouncementData = {
+	general_id: '811417859904372806',
+	event_id: '811428311119953930',
+	stream_id: '811421682304417833',
+	video_id: '811421729305264208'
+}
 
 export function postEvent(message: string, ts?: Date | number){
-	const eventChannel = '811428311119953930'
+	const eventChannel = announcementChannels.event_id
 
 	sendMessage(eventChannel, message, {
 		everyone: true,
@@ -15,7 +24,7 @@ export function postEvent(message: string, ts?: Date | number){
 }
 
 export function postAnnouncement(message: string){
-	const eventChannel = '811428311119953930'
+	const eventChannel = announcementChannels.general_id
 
 	sendMessage(eventChannel, message, {
 		everyone: true,
@@ -23,7 +32,7 @@ export function postAnnouncement(message: string){
 	});
 }
 export function postStream(message: string){
-	const streamChannel = '811428311119953930'
+	const streamChannel = announcementChannels.stream_id
 	const url = 'https://twitch.tv/tdefton'
 	sendMessage(streamChannel, message, {
 		everyone: true,
@@ -34,7 +43,7 @@ export function postStream(message: string){
 }
 
 export function postYTVideo(message: string, url: string){
-	const videoChannel = '811421729305264208'
+	const videoChannel = announcementChannels.video_id
 	const link = /^(https:\/\/)(.)+/g.test(url) ? url : null;
 	if(link){
 		sendMessage(videoChannel, message, {
@@ -50,10 +59,8 @@ export function postYTVideo(message: string, url: string){
 }
 
 export function initAnnouncements(){
-	const guilds = client.guilds.cache.array()
-	guilds[0].channels.cache.array().forEach(channel => {
-		console.log(`${channel.name}: ${channel.id}`);
-	})
+	console.log(`Initializing announcements engine...`)
+	savePropToConfig('announcement_data', announcementChannels)
 	pushGMFunction( (msg) => {
 		try{
 			if(msg.content.startsWith('!announce ')){

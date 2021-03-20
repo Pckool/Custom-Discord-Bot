@@ -1,6 +1,6 @@
 import { client, guild } from "../client";
 import {emoji} from 'node-emoji';
-import {getConfigProp, saveToConfig, configFile} from './../handlers/config'
+import {getConfigProp, saveToConfig} from './../handlers/config'
 import {TheatreData} from './../interfaces'
 import { GuildChannel, GuildChannelResolvable, TextChannel } from "discord.js";
 
@@ -16,8 +16,8 @@ const enjoyLines = [
 	`Have fun!`,
 	`Woot Woot!`
 ]
-
 const getEnjoyLine = () => enjoyLines[Math.floor(enjoyLines.length * Math.random())];
+
 export async function createTheatre(){
 	const cat = await createCat();
 	await createChat(cat)

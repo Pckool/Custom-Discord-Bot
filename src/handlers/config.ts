@@ -7,7 +7,8 @@ interface ConfigData {
 
 }
 
-const configDir = path.join(__dirname, 'conf/bot.conf')
+const configDir = path.join(__dirname, '../../conf/bot.conf');
+
 export function getConfig(): ConfigData{
 	try{
 		console.log('retrieving config...')

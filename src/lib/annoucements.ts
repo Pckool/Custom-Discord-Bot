@@ -5,6 +5,50 @@ import { pushDMFunction, pushGMFunction, pushMessageFunction, sendEmbededMessage
 import emoji from 'node-emoji'
 import { basicPermissionError } from "../helper";
 
+export function postEvent(message: string, ts?: Date | number){
+	const eventChannel = '811428311119953930'
+
+	sendMessage(eventChannel, message, {
+		everyone: true,
+		title: '__EVENT__'
+	});
+}
+
+export function postAnnouncement(message: string){
+	const eventChannel = '811428311119953930'
+
+	sendMessage(eventChannel, message, {
+		everyone: true,
+		title: '__EVENT__'
+	});
+}
+export function postStream(message: string){
+	const streamChannel = '811428311119953930'
+	const url = 'https://twitch.tv/tdefton'
+	sendMessage(streamChannel, message, {
+		everyone: true,
+		url,
+		urlInContent: true,
+		title: '__WE\'RE LIVE__'
+	});
+}
+
+export function postYTVideo(message: string, url: string){
+	const videoChannel = '811421729305264208'
+	const link = /^(https:\/\/)(.)+/g.test(url) ? url : null;
+	if(link){
+		sendMessage(videoChannel, message, {
+			everyone: true,
+			url: message,
+			urlInContent: true,
+			title: 'NEW VIDEO'
+		});
+	}
+	else{
+		throw new Error(`The link you gave is invalid ${emoji.emoji.disappointed}`)
+	}
+}
+
 export function initAnnouncements(){
 	const guilds = client.guilds.cache.array()
 	guilds[0].channels.cache.array().forEach(channel => {
@@ -16,21 +60,15 @@ export function initAnnouncements(){
 				if(!client.guilds.cache.array().find(guild => guild.ownerID === msg.author.id)) throw basicPermissionError;
 				const messageSplit = msg.content.split(' ')
 				
-				sendMessage('811417859904372806', messageSplit.slice(1).join(' '), {
-					everyone: true,
-					title: "ANNOUNCEMENT"
-				});
+				postAnnouncement(messageSplit.slice(1).join(' '));
 				msg.react(emoji.get('thumbsup'))
 			}
-			
+
 			else if(msg.content.startsWith('!announce-event ')){
 				if(!client.guilds.cache.array().find(guild => guild.ownerID === msg.author.id)) throw basicPermissionError;
 				const messageSplit = msg.content.split(' ')
 				
-				sendMessage('811428311119953930', messageSplit.slice(1).join(' '), {
-					everyone: true,
-					title: 'EVENT'
-				});
+				postEvent(messageSplit.slice(1).join(' '));
 				msg.react(emoji.get('thumbsup'))
 			}
 
@@ -38,12 +76,7 @@ export function initAnnouncements(){
 				if(!client.guilds.cache.array().find(guild => guild.ownerID === msg.author.id)) throw basicPermissionError;
 				const messageSplit = msg.content.split(' ')
 				
-				sendMessage('811421682304417833', messageSplit.slice(1).join(' '), {
-					everyone: true,
-					url: 'https://twitch.tv/tdefton',
-					urlInContent: true,
-					title: 'NEW STREAM'
-				});
+				postStream(messageSplit.slice(1).join(' '));
 				msg.react(emoji.get('thumbsup'))
 			}
 			
@@ -51,21 +84,9 @@ export function initAnnouncements(){
 				if(!client.guilds.cache.array().find(guild => guild.ownerID === msg.author.id)) throw basicPermissionError;
 
 				const messageSplit = msg.content.split(' ')
-				
-				const link = /^(https:\/\/)(.)+/g.test(messageSplit[1]) ? messageSplit[1] : null;
+				postYTVideo(messageSplit.slice(2).join(' '), messageSplit[1]);
+				msg.react(emoji.get('thumbsup'))
 
-				if(link){
-					sendMessage('811421729305264208', messageSplit.slice(2).join(' '), {
-						everyone: true,
-						url: messageSplit[1],
-						urlInContent: true,
-						title: 'NEW VIDEO'
-					});
-					msg.react(emoji.get('thumbsup'))
-				}
-				else{
-					throw new Error(`The link you gave is invalid ${emoji.emoji.disappointed}`)
-				}
 			}
 		} catch(err){
 			console.warn(err.message)

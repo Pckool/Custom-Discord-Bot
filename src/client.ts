@@ -1,7 +1,7 @@
-import {Client} from 'discord.js';
+import {Client, Guild} from 'discord.js';
 const client = new Client();
 const token = process.env.DISCORD_TOKEN;
-
+let mainGuild: Guild = null;
 export async function login(){
 	if(!token) {
 		throw new Error('No token available!')
@@ -18,6 +18,7 @@ export async function start() {
 			const gid = guild.id
 			if(gid){
 				// console.log(`${gid}: ${guild.name}`);
+				mainGuild = guild;
 			}
 		});
 	} catch(err){
@@ -28,5 +29,6 @@ export async function start() {
 }
 
 export {
-	client
+	client,
+	mainGuild as guild
 };

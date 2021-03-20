@@ -5,13 +5,13 @@ import {} from 'lodash';
 
 const port = process.env.PORT?process.env.PORT:8887;
 import {startServer} from './restApi';
-// fs
-import fs from 'fs';
+
 // discord
 import {client, start} from './client'
 import { initVerification } from './lib/verification'
 import { initAnnouncements } from './lib/annoucements'
 import { pushMessageFunction, pushDMFunction } from './handlers/messageHandler';
+import { initTheatre } from './lib/movieTheater';
 
 
 
@@ -21,6 +21,7 @@ import { pushMessageFunction, pushDMFunction } from './handlers/messageHandler';
 	client.on('ready', () => {
 		initVerification()
 		initAnnouncements()
+		initTheatre()
 	})
 	
 	

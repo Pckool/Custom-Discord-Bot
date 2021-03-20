@@ -10,4 +10,4 @@ services:
       - redis
     restart: always
     volumes:
-      - "/home/comet/config:/conf"
+      - "/home/comet/config:/bot/conf"

@@ -17,7 +17,7 @@ export async function createTheatre(){
 }
 
 async function createCat(){
-	const cat = await guild.channels.create(`Watch Together! ${ emoji.get(emoji.emoji.movie_camera) }`, {
+	const cat = await guild.channels.create(`Watch Together! ${ emoji.get(emoji.emoji.clapper) }`, {
 		type: 'category',
 
 	});
@@ -26,7 +26,7 @@ async function createCat(){
 }
 
 async function createChat(cat: GuildChannelResolvable){
-	const chat = await guild.channels.create(`${ emoji.get(emoji.emoji.left_speech_bubble) }theater-chat`, {
+	const chat = await guild.channels.create(`${ emoji.get(emoji.emoji.movie_camera) }theater-chat`, {
 		type: 'text',
 		parent: cat,
 
@@ -36,7 +36,7 @@ async function createChat(cat: GuildChannelResolvable){
 }
 
 async function createVoice(cat: GuildChannelResolvable){
-	const voice = await guild.channels.create(`${ emoji.get(emoji.emoji.popcorn) }Theater!`, {
+	const voice = await guild.channels.create(`${ emoji.get(emoji.emoji.popcorn) } Theater`, {
 		type: 'voice',
 		parent: cat,
 
@@ -69,7 +69,7 @@ function watchChatChannel(){
 		if(curr.channelID === theatre.voiceId && curr.channelID !== old.channelID){
 			const chan = guild.channels.resolve(theatre.chatId)
 			if(chan.type === 'text'){
-				(chan as TextChannel).send(`@<${curr.member.id}> walked in the movie theatre! ${'Enjoy the popcorn!'}`)
+				(chan as TextChannel).send(`<@${curr.member.id}> walked in the movie theatre! ${'Enjoy the popcorn!'}`)
 			}
 		}
 	})
@@ -95,10 +95,10 @@ export function initTheatre(){
 				createVoice(guild.channels.resolve(theatre.categoryId))
 			}
 		}
-		watchChatChannel()
+		
 	}
 	else{
 		createTheatre()
 	}
-	
+	watchChatChannel()
 }

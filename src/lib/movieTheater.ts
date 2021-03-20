@@ -1,5 +1,5 @@
 import { client, guild } from "../client";
-import emoji from 'node-emoji';
+import {emoji} from 'node-emoji';
 import {getConfigProp, saveToConfig, configFile} from './../handlers/config'
 import {TheatreData} from './../interfaces'
 import { GuildChannel, GuildChannelResolvable, TextChannel } from "discord.js";
@@ -9,6 +9,15 @@ const theatre: TheatreData = {
 	chatId: '',
 	voiceId: ''
 }
+const enjoyLines = [
+	'Enjoy the film!',
+	`Hope you brought snacks ${emoji.pizza}`,
+	`Don't spill your drink ${emoji.angry}`,
+	`Have fun!`,
+	`Woot Woot!`
+]
+
+const getEnjoyLine = () => enjoyLines[Math.floor(enjoyLines.length * Math.random())];
 export async function createTheatre(){
 	const cat = await createCat();
 	await createChat(cat)
@@ -17,7 +26,7 @@ export async function createTheatre(){
 }
 
 async function createCat(){
-	const cat = await guild.channels.create(`Watch Together! ${ emoji.get(emoji.emoji.clapper) }`, {
+	const cat = await guild.channels.create(`Watch Together! ${ emoji.clapper }`, {
 		type: 'category',
 
 	});
@@ -26,7 +35,7 @@ async function createCat(){
 }
 
 async function createChat(cat: GuildChannelResolvable){
-	const chat = await guild.channels.create(`${ emoji.get(emoji.emoji.movie_camera) }theater-chat`, {
+	const chat = await guild.channels.create(`${ emoji.movie_camera }theater-chat`, {
 		type: 'text',
 		parent: cat,
 
@@ -36,7 +45,7 @@ async function createChat(cat: GuildChannelResolvable){
 }
 
 async function createVoice(cat: GuildChannelResolvable){
-	const voice = await guild.channels.create(`${ emoji.get(emoji.emoji.popcorn) } Theater`, {
+	const voice = await guild.channels.create(`${ emoji.popcorn } Theater`, {
 		type: 'voice',
 		parent: cat,
 
@@ -69,7 +78,8 @@ function watchChatChannel(){
 		if(curr.channelID === theatre.voiceId && curr.channelID !== old.channelID){
 			const chan = guild.channels.resolve(theatre.chatId)
 			if(chan.type === 'text'){
-				(chan as TextChannel).send(`<@${curr.member.id}> walked in the movie theatre! ${'Enjoy the popcorn!'}`)
+				(chan as TextChannel).send(`<@${curr.member.id}> walked into the movie theater! ${getEnjoyLine()}`)
+				// (chan as TextChannel).send(`**curr.member.username** walked into the movie theater! ${getEnjoyLine()}`)
 			}
 		}
 	})

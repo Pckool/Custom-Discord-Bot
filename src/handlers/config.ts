@@ -35,7 +35,7 @@ export function savePropToConfig<T extends keyof ConfigData>(prop: T, data: Conf
 	
 	fs.writeFileSync(configFile, JSON.stringify(conf), {encoding: 'utf-8'})
 }
-export function getConfigProp(prop: keyof ConfigData): TheatreData | null { 
+export function getConfigProp<T extends keyof ConfigData>(prop: T): ConfigData[T] | null { 
 	const conf = getConfig();
 	
 	if(conf[prop]){ return conf[prop] }

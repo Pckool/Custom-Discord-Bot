@@ -45,7 +45,7 @@ export function pushMessageFunction(fn: (msg: Message) => unknown){
 export function sendMessage(channel: TextChannel | string, msg: string, options?: Partial<MsgOptions>){
 	const chnl = findTextChannel(channel)
 	chnl.send(<MessageOptions>{
-		content: `${options.everyone ? '@here\n' : ''} \n${options.title ? '**' + options.title + '**\n' : ''}${options.urlInContent + '\n' ? options.url : ''}*${msg}*\n`,
+		content: `${options.everyone ? '@here\n' : ''} \n${options.title ? '**' + options.title + '**\n' : ''}${options.urlInContent + '\n' ? options.url : ''} *${msg}*\n`,
 	});
 }
 
